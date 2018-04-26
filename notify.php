@@ -2,13 +2,14 @@
 include('./classes/DB.php');
 include('./classes/Login.php');
 
+
 $isAdmin = False;
 if (Login::isLoggedIn()) {
     $userid = Login::isLoggedIn();
     $username = DB::query('SELECT username FROM users WHERE id = :userid', array(':userid' => $userid))[0]['username'];
     if (DB::query('SELECT username FROM admins WHERE username=:username', array(':username' => $username))) $isAdmin = True;
 } else {
-    echo 'Not logged in';
+    die('Not logged in');
 }
 
 
@@ -30,52 +31,7 @@ if (Login::isLoggedIn()) {
 <body>
 
 <div>
-    <nav class="navbar navbar-default hidden-xs navigation-clean">
-        <div class="container">
-            <div class="navbar-header"><a class="navbar-brand navbar-link"
-                                          href="profile.php?username=<?php echo $username ?>"><i
-                            class="icon ion-ios-people"></i></a>
-                <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span
-                            class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span
-                            class="icon-bar"></span><span class="icon-bar"></span></button>
-            </div>
-            <div class="collapse navbar-collapse" id="navcol-1">
-                <form class="navbar-form navbar-left" action="index.php" method="post">
-                    <div class="searchbox"><i class="glyphicon glyphicon-search"></i>
-                        <input class="form-control sbox" name="searchbox" type="text">
-                        <ul class="list-group autocomplete" style="position:absolute;width:100%; z-index:100">
-                        </ul>
-                    </div>
-                </form>
-                <ul class="nav navbar-nav hidden-xs hidden-sm navbar-right">
-                    <li role="presentation"><a href="index.php">Timeline</a></li>
-                    <?php
-                    if (Login::isLoggedIn()) {
-                        echo "<li role=\"presentation\"><a href=\"my-messages.php\">Messages</a></li>";
-                        echo "<li role=\"presentation\"><a href=\"notify.php\">Notifications</a></li>";
-                    } else {
-                        echo "<li role=\"presentation\"><a href=\"create-account.php\">Register</a></li>";
-                        echo "<li role=\"presentation\"><a href=\"login.php\">Login </a></li>";
-                    }
-                    if ($isAdmin) {
-                        echo "<li class=\"dropdown\"><a class=\"dropdown-toggle\" data-toggle=\"dropdown\" aria-expanded=\"false\" href=\"#\">Admin<span class=\"caret\"></span></a>";
-                    } else {
-                        echo "<li class=\"dropdown\"><a class=\"dropdown-toggle\" data-toggle=\"dropdown\" aria-expanded=\"false\" href=\"javascript:void(0);\" id=\"userdrop1\" aria-haspopup=\"true\">User<span class=\"caret\"></span></a>";
-                    }
-                    ?>
-                    <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                        <?php if (Login::isLoggedIn()) {
-                            if ($isAdmin) echo "<li role=\"presentation\"><a href=\"userlist.php\">UserList</a></li>";
-                            echo "<li role=\"presentation\"><a href=\"logout.php\">Logout </a></li>";
-                        } else {
-                            echo "<li role=\"presentation\"><a href=\"login.php\">Login </a></li>";
-                        }
-                        ?>
-                    </ul>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php include dirname(__FILE__).'/header.php' ?>
 </div>
 
 <div class="container">
@@ -95,18 +51,21 @@ if (Login::isLoggedIn()) {
         } else if ($n['type'] == 2) {
             $senderName = DB::query('SELECT username FROM users WHERE id=:senderid', array(':senderid' => $n['sender']))[0]['username'];
             echo "<p>".$senderName . " liked your post!</p><hr/>";
+        } else if ($n['type'] == 3) {
+            $senderName = DB::query('SELECT username FROM users WHERE id=:senderid', array(':senderid' => $n['sender']))[0]['username'];
+            $postLink = 'profile.php?username=' . $username;
+            echo "<p>".$senderName . " want to comment your <a href='". $postLink ."'>post</a>.</p><hr/>";
+        } else if ($n['type'] == 4) {
+            $senderName = DB::query('SELECT username FROM users WHERE id=:senderid', array(':senderid' => $n['sender']))[0]['username'];
+            $profileLink = 'profile.php?username=' . $senderName;
+            echo "<p><a href=" . $profileLink . ">" . $senderName . "</a> want to be your friend.</p><hr/>";
+
         }
     }
     ?>
 </div>
 
-<div class="footer-dark navbar-fixed-bottom" style="position: relative">
-    <footer>
-        <div class="container">
-            <p class="copyright">Social Network</p>
-        </div>
-    </footer>
-</div>
+<?php include dirname(__FILE__).'/footer.php' ?>
 <script src="assets/js/jquery.min.js"></script>
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/js/bs-animation.js"></script>

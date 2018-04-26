@@ -5,3 +5,8 @@
   border-left:5px solid #FaFaFa;
 }
 
+#avatar{
+	max-width: 100%;
+	height: auto;
+	background-color: powderblue;
+}

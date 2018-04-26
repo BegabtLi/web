@@ -108,6 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 
     }
 
+
+
     if ($_GET['url'] == "auth") {
 
         $postBody = file_get_contents("php://input");

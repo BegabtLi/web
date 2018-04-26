@@ -6,7 +6,7 @@ include_once('Comment.php');
 class Post
 {
 
-    public static function createPost($postbody, $loggedInUserId, $profileUserId, $isAdmin, $privacy)
+    public static function createPost($postbody, $loggedInUserId, $profileUserId, $isAdmin, $privacy, $need)
     {
 
         if (strlen($postbody) > 160 || strlen($postbody) < 1) {
@@ -28,14 +28,14 @@ class Post
                 }
             }
 
-            DB::query('INSERT INTO posts VALUES (\'\', :postbody, NOW(), :userid, :privacy, 0, \'\', :topics)', array(':postbody' => $postbody, ':userid' => $profileUserId, ':privacy' => $privacy, ':topics' => $topics));
+            DB::query('INSERT INTO posts VALUES (\'\', :postbody, NOW(), :userid, :privacy, :need, 0, \'\', :topics)', array(':postbody' => $postbody, ':userid' => $profileUserId, ':privacy' => $privacy, ':need' => $need, ':topics' => $topics));
 
         } else {
             die('Incorrect user!');
         }
     }
 
-    public static function createImgPost($postbody, $loggedInUserId, $profileUserId, $isAdmin, $privacy)
+    public static function createImgPost($postbody, $loggedInUserId, $profileUserId, $isAdmin, $privacy, $need)
     {
 
         if (strlen($postbody) > 160) {
@@ -56,26 +56,12 @@ class Post
                 }
             }
 
-            DB::query('INSERT INTO posts VALUES (\'\', :postbody, NOW(), :userid, :privacy, 0, \'\', \'\')', array(':postbody' => $postbody, ':userid' => $profileUserId, ':privacy' => $privacy, ':topics' => $topics));
+            DB::query('INSERT INTO posts VALUES (\'\', :postbody, NOW(), :userid, :privacy, :need, 0, \'\', :topics)', array(':postbody' => $postbody, ':userid' => $profileUserId, ':privacy' => $privacy, ':need' => $need, ':topics' => $topics));
             $postid = DB::query('SELECT id FROM posts WHERE user_id=:userid ORDER BY ID DESC LIMIT 1;', array(':userid' => $loggedInUserId))[0]['id'];
             return $postid;
         } else {
             die('Incorrect user!');
         }
-    }
-
-    public static function likePost($postId, $likerId)
-    {
-
-        if (!DB::query('SELECT user_id FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid' => $postId, ':userid' => $likerId))) {
-            DB::query('UPDATE posts SET likes=likes+1 WHERE id=:postid', array(':postid' => $postId));
-            DB::query('INSERT INTO post_likes VALUES (\'\', :postid, :userid)', array(':postid' => $postId, ':userid' => $likerId));
-            Self::createNotify("", $postId);
-        } else {
-            DB::query('UPDATE posts SET likes=likes-1 WHERE id=:postid', array(':postid' => $postId));
-            DB::query('DELETE FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid' => $postId, ':userid' => $likerId));
-        }
-
     }
 
     public static function getTopics($text)
@@ -135,14 +121,10 @@ class Post
                                 ";
 
                                 }
-                               
+
                                 if ($userid == $loggedInUserId || $isAdmin) {
                                         $posts .= "<input class=\"btn btn-danger\"  type='submit' name='deletepost' value='x' />";
                                 }
-                                $posts .= "
-                                </form><hr /></br />
-                                ";
-
                         } else {
                                 $posts .= "<img src='".$p['postimg']."'>".self::link_add($p['body'])."
                                 <form action='profile.php?username=$username&postid=".$p['id']."' method='post'>
@@ -152,10 +134,15 @@ class Post
                                 if ($userid == $loggedInUserId) {
                                         $posts .= "<input class=\"btn btn-danger\"  type='submit' name='deletepost' value='x' />";
                                 }
-                                $posts .= "
-                                </form><hr /></br />
-                                ";
                         }
+
+                        if ($p['comment'] == 1) {
+                            $posts .= "</hr /><input class=\"btn btn-primary\"  type='submit' name='allow' value='Allow comment by others' />";
+                        } else {
+                            $posts .= "</hr /><input class=\"btn btn-danger\"  type='submit' name='disable' value='Disable comments' />";
+                        }
+                        $posts .= "</form><hr /></br />";
+
                 }
 
                 return $posts;
@@ -166,53 +153,78 @@ class Post
 
         public static function displayPosts($userid, $username, $loggedInUserId,$isAdmin) {
                 $dbposts = DB::query('SELECT * FROM posts WHERE user_id=:userid ORDER BY id DESC', array(':userid'=>$userid));
-                
+
 
                 return self::displaySearchPosts($dbposts,$userid, $username, $loggedInUserId,$isAdmin);
 
         }
 
-        public static function display($posts){
+    public static function display($posts, $userid)
+    {
 
-                foreach($posts as $post) {
-                    $profileLink = 'profile.php?username='.$post['username'].'';
-                    echo "<div class=\"lead text-primary\">".$post['body']. " 
-                          <p>Posted BY <a href=".$profileLink.">".$post['username']."</a></p></div>";
-                    echo "<form action='index.php?postid=".$post['id']."' class=\"form-group\" method='post'>";
+        foreach ($posts as $post) {
+            $profileLink = 'profile.php?username=' . $post['username'] . '';
+            echo "<div class=\"lead text-primary\">" . $post['body'] . " 
+                          <p>Posted BY <a href=" . $profileLink . ">" . $post['username'] . "</a></p></div>";
+            echo "<form action='index.php?postid=" . $post['id'] . "' class=\"form-group\" method='post'>";
 
-                    if (!DB::query('SELECT post_id FROM post_likes WHERE post_id=:postid', array(':postid'=>$post['id']))) {
+            if ($userid) {
+                if (!DB::query('SELECT post_id FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid' => $post['id'], ':userid' => $userid))) {
+                    echo "<input type='submit' class=\"btn btn-danger\" name='change_like' value='Like'>";
+                } else {
+                    echo "<input type='submit' class=\"btn btn-danger\" name='change_like' value='Unlike'>";
+                }
+                echo "<span class=\"text-danger\">" . $post['likes'] . " likes</span>";
 
-                    echo "<input type='submit' class=\"btn btn-danger\" name='like' value='Like'>";
-                    } else {
-                    echo "<input type='submit' class=\"btn btn-danger\" name='unlike' value='Unlike'>";
-                    }
-                     echo "<span class=\"text-danger\">".$post['likes']." likes</span>";
-
-                    echo "<hr/>";
-                    echo Comment::displayComments($post['id']);
-                    echo "</form>
-                    <form action='index.php?postid=".$post['id']."' class=\"form-group\"  method='post'  enctype=\"multipart/form-data\">
-                    <textarea  class=\"form-control\" name='commentbody' rows='3' cols='50'></textarea>
-                    
-                     <div class=\"form-group\">
-                               <br />Upload image or video:
-                        </div>
-                     <div class=\"form-group\">
-                               <input type=\"file\" class=\"btn btn-info\" name=\"commentimg\"> 
-                        </div>
-                        <div class=\"form-group\" >  
-                    <input type='submit' name='comment' class=\"btn btn-success\" value='Comment'>
+                echo "<hr/>";
+                echo Comment::displayComments($post['id']);
+                echo "</form>";
+                if ($post['comment'] == 0) {
+                    echo "
+                     <form action='index.php?postid=" . $post['id'] . "' class=\"form-group\"  method='post'  enctype=\"multipart/form-data\">
+                     <div>
+                         <textarea  class=\"form-control\" name='commentbody' rows='3' cols='50'></textarea>
                      </div>
-
-
+                     <div class=\"form-group\">Upload image or video:</div>
+                     <div class=\"form-group\">
+                         <input type=\"file\" class=\"btn btn-info\" name=\"commentimg\"/>
+                     </div>
+                     <div class=\"form-group\" >  
+                         <input type='submit' name='comment' class=\"btn btn-success\" value='Comment'>
+                     </div>
                     </form>
                     ";
-                    Comment::displayComments($post['id']);
+                } else {
                     echo "
-                    <hr /></br />";
-
-                 }
+                     <form action='index.php?postid=" . $post['id'] . "' class=\"form-group\"  method='post'  enctype=\"multipart/form-data\">
+                     <div class=\"form-group\" >  
+                         <input type='submit' name='comment' class=\"btn btn-success\" value='Request Comment'>
+                     </div>
+                    </form>
+                    ";
+                }
+                echo "<hr /></br />";
+            } else {
+                echo Comment::displayComments($post['id']);
+                echo "</form>";
+            }
+//            echo $post['comment'];
         }
+    }
+
+    public static function likePost($postId, $likerId)
+    {
+
+        if (!DB::query('SELECT user_id FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid' => $postId, ':userid' => $likerId))) {
+            DB::query('UPDATE posts SET likes=likes+1 WHERE id=:postid', array(':postid' => $postId));
+            DB::query('INSERT INTO post_likes VALUES (\'\', :postid, :userid)', array(':postid' => $postId, ':userid' => $likerId));
+            Self::createNotify("", $postId);
+        } else {
+            DB::query('UPDATE posts SET likes=likes-1 WHERE id=:postid', array(':postid' => $postId));
+            DB::query('DELETE FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid' => $postId, ':userid' => $likerId));
+        }
+
+    }
 
     public static function createNotify($text = "", $postid = 0)
     {

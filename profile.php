@@ -4,6 +4,7 @@ include('./classes/Login.php');
 include('./classes/Post.php');
 include('./classes/Image.php');
 include('./classes/Notify.php');
+include('./classes/Request.php');
 
 $username = "";
 $verified = False;
@@ -11,7 +12,8 @@ $isFollowing = False;
 $post = False;
 $search = False;
 $isAdmin = False;
-$privacy;
+$privacy = 0;
+$need = 0;
 
 
 if (isset($_GET['username'])) {
@@ -22,13 +24,16 @@ if (isset($_GET['username'])) {
         $userimg =  DB::query('SELECT profileimg FROM users WHERE username=:username', array(':username' => $_GET['username']))[0]['profileimg'];
         $verified = DB::query('SELECT verified FROM users WHERE username=:username', array(':username' => $_GET['username']))[0]['verified'];
         $followerid = Login::isLoggedIn();
-        $followername = DB::query('SELECT username FROM users WHERE id = :userid', array(':userid' => $followerid))[0]['username'];
-
-        if (DB::query('SELECT username FROM admins WHERE username=:username', array(':username' => $followername))) $isAdmin = True;
+        if ($followerid) {
+            $followername = DB::query('SELECT username FROM users WHERE id = :userid', array(':userid' => $followerid))[0]['username'];
+            if (DB::query('SELECT username FROM admins WHERE username=:username', array(':username' => $followername))) $isAdmin = True;
+        }
 
         if (isset($_POST['follow'])) {
 
             if ($userid != $followerid) {
+
+                Request::friendRequest($userid, $followerid);
 
                 if (!DB::query('SELECT follower_id FROM followers WHERE user_id=:userid AND follower_id=:followerid', array(':userid' => $userid, ':followerid' => $followerid))) {
                     if ($followerid == 6) {
@@ -66,6 +71,14 @@ if (isset($_GET['username'])) {
             }
         }
 
+        if (isset($_POST['allow'])) {
+            DB::query('UPDATE posts SET comment=0 WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid));
+        }
+
+        if (isset($_POST['disable'])) {
+            DB::query('UPDATE posts SET comment=1 WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid));
+        }
+
 
         if (isset($_POST['post'])) {
 
@@ -84,10 +97,12 @@ if (isset($_GET['username'])) {
                     break;
             }
 
+            if ($_POST['need_approval']) $need = 1;
+
             if ($_FILES['postimg']['size'] == 0) {
-                $postid = Post::createPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy);
+                $postid = Post::createPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy, $need);
             } else {
-                $postid = Post::createImgPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy);
+                $postid = Post::createImgPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy, $need);
                 Image::uploadImage('postimg', "UPDATE posts SET postimg=:postimg WHERE id=:postid", array(':postid' => $postid));
             }
 
@@ -157,134 +172,91 @@ if (isset($_GET['username'])) {
 
 <body>
 <div>
-    <nav class="navbar navbar-default hidden-xs navigation-clean">
-        <div class="container">
-            <div class="navbar-header"><a class="navbar-brand navbar-link"
-                                          href="profile.php?username=<?php echo $followername ?>"><i
-                            class="icon ion-ios-people"></i></a>
-                <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span
-                            class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span
-                            class="icon-bar"></span><span class="icon-bar"></span></button>
-            </div>
-            <div class="collapse navbar-collapse" id="navcol-1">
-                <form class="navbar-form navbar-left" method="post"
-                      action="profile.php?username=<?php echo($username); ?>">
-                    <div class="searchbox"><i class="glyphicon glyphicon-search"></i>
-                        <input class="form-control" name="searchbox" type="text">
-                    </div>
-                </form>
-                <ul class="nav navbar-nav hidden-xs hidden-sm navbar-right">
-                    <li role="presentation"><a href="index.php">Timeline</a></li>
-                    <li role="presentation"><a href="my-messages.php">Messages</a></li>
-                    <li role="presentation"><a href="notify.php">Notifications</a></li>
-                    <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false" href="#">User <span class="caret"></span></a>
-                        <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                            <li role="presentation"><a href="send-message.php?receiver=<?php echo($userid); ?>">Send Messages </a></li>
-                            <?php
-
-                            if ($isAdmin) {
-
-                                echo "<li role=\"presentation\"><a href='delete-account.php?userid=$userid'>Delete User Account </a></li>";
-                                echo "<li role=\"presentation\"><a href='update-account.php?userid=$userid'>Update User Account </a></li>";
-                                echo "<li role=\"presentation\"><a href=\"userlist.php\">UserList</a></li>";
-
-                            }
-
-
-                            if (Login::isLoggedIn()) {
-                                echo "<li role=\"presentation\"><a href=\"logout.php\">Logout </a></li>";
-                            } else {
-                                echo "<li role=\"presentation\"><a href=\"login.php\">Login </a></li>";
-                            }
-
-                            ?>
-
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php include dirname(__FILE__).'/header.php' ?>
 </div>
-<div class="container">
-
+<div class="container mod">
     <h1> <img src=<?php echo $userimg ?> class="img-circle" alt="My Image" style="width:60px;height:60px;"> <?php echo $username; ?>'s Profile <i class="glyphicon glyphicon-ok-sign verified" data-toggle="tooltip" title="Verified User" style="font-size:28px;color:#da052b;"></i></h1>
+    <div class="row">
+        <div class="col-md-3">
+            <ul class="list-group">
+                <li class="list-group-item"><span><strong>About Me</strong></span>
+                    <p>
+                        <?php
+                        // $profileimg = DB::query('SELECT profileimg FROM users Where username=：username',array(':username'=>$username))[0]['profileimg'];
+                        ?>
 
-</div>
+                        <!-- <img id="avatar" src="<?php echo $userimg;?>"> -->
+                    </p>
 
-<div>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-3">
-                <ul class="list-group">
-                    <li class="list-group-item"><span><strong>About Me</strong></span>
-                        <p>Welcome <?php echo $username; ?>'s Profile<?php if ($verified) {
-                                echo ' - Verified';
-                            } ?></p>
-                        <form action="profile.php?username=<?php echo $username; ?>" method="post">
-                            <?php
-                            if ($userid != $followerid) {
-                                if ($isFollowing) {
-                                    echo '<input type="submit" class="btn btn-danger" name="unfollow" value="Remove from Friends List">';
-                                } else {
-                                    echo '<input type="submit" class="btn btn-primary" name="follow" value="Add to Friends List">';
-                                }
+                    <p>Welcome <?php echo $username; ?>'s Profile<?php if ($verified) {
+                            echo ' - Verified';
+                        } ?></p>
+                    <form action="profile.php?username=<?php echo $username; ?>" method="post">
+                        <?php
+                        if ($userid != $followerid) {
+                            if ($isFollowing) {
+                                echo '<input type="submit" class="btn btn-danger" name="unfollow" value="Remove from Friends List">';
+                            } else {
+                                echo '<input type="submit" class="btn btn-primary" name="follow" value="Be Friend">';
                             }
-                            ?>
-                    </li>
-                </ul>
-            </div>
-            <div class="col-md-6">
-                <ul class="list-group">
+                        }
+                        ?>
+                    </form>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <ul class="list-group">
+                <li class="list-group-item">
                     <?php if ($post) {
                         if (!$search) {
                             echo $posts;
                         }
                         else {echo Post::displaySearchPosts($posts,$userid, $username, $followerid, $isAdmin);}
-                        } ?>
-                </ul>
-            </div>
-            <div class="col-md-3">
-                <form action="profile.php?username=<?php echo $username; ?>" method="post" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <textarea name="postbody" class="form-control" rows="12"></textarea>
-                    </div>
+                    } ?>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-3">
+            <form action="profile.php?username=<?php echo $username; ?>" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <textarea name="postbody" class="form-control" rows="10"></textarea>
+                </div>
 
-                    <div class="form-group">
-                        <br/>Upload an image:
-                    </div>
+                <div class="form-group">
+                    <br/>Upload an image:
+                </div>
 
-                    <div class="form-group">
-                        <input type="file" class="btn btn-info" name="postimg">
-                    </div>
+                <div class="form-group">
+                    <input type="file" class="btn btn-info" name="postimg">
+                </div>
 
+                <div>
                     <div class="radio">
-                        <label><input type="radio" name="setting" value="public" checked> Public</label>
+                        <label><input type="radio" name="setting" value="public" checked> Public </label>
                     </div>
                     <div class="radio">
-                        <label><input type="radio" name="setting" value="private"> Private</label>
+                        <label><input type="radio" name="setting" value="private"> Private </label>
                     </div>
                     <div class="radio ">
-                        <label><input type="radio" name="setting"><input type="radio" name="setting" value="friends"> Friends Only</label>
+                        <label><input type="radio" name="setting" value="friends"> Friends Only </label>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <input type="submit" class="btn btn-danger" name="post" value="NEW POST">
-                    </div>
+                <div>
+                    <label><input type="checkbox" name="need_approval" value="need"> Need approval for comment </label>
+                </div>
 
-                </form>
+                <div class="form-group">
+                    <input type="submit" class="btn btn-danger" name="post" value="NEW POST">
+                </div>
 
-            </div>
+            </form>
+
         </div>
     </div>
 </div>
-<div class="footer-dark">
-    <footer>
-        <div class="container">
-            <p class="copyright">Social Network</p>
-        </div>
-    </footer>
-</div>
+<?php include dirname(__FILE__).'/footer.php' ?>
 <script src="assets/js/jquery.min.js"></script>
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/js/bs-animation.js"></script>

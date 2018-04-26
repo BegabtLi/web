@@ -47,7 +47,7 @@ if (isset($_POST['login'])) {
 <div class="login-clean">
     <form method="post">
         <h2 class="sr-only">Login Form</h2>
-        <div class="illustration"><i class="icon ion-ios-navigate"></i></div>
+        <div class="illustration"><i class="icon ion-log-in"></i></div>
         <div class="form-group">
             <input class="form-control" type="text" id="username" name="username" placeholder="Username">
         </div>

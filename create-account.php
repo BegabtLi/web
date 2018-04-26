@@ -24,7 +24,7 @@
 <div class="login-clean">
     <form method="post">
         <h2 class="sr-only">Create Account</h2>
-        <div class="illustration"><i class="icon ion-ios-navigate"></i></div>
+        <div class="illustration"><i class="icon ion-android-create"></i></div>
         <div class="form-group">
             <input class="form-control" id="username" type="text" name="username" placeholder="Username">
         </div>
