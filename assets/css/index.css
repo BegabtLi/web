@@ -1,0 +1,105 @@
+img#avatar {
+	display: block;
+	width: 80%;
+	max-height: 100%;
+	max-width: 100%;
+	margin-left: auto;
+    margin-right: auto;
+    
+    /*width: 100;*/
+}
+
+.photo #file-input {
+	display:none;
+}
+
+img.image {
+	margin-top: 10px;
+	max-height: 400;
+	max-width: 100%;
+}
+
+img.imgprofile{
+	max-height: 500;
+	max-width: 100%;
+}
+img.img-circle{
+	width:auto;
+	height: auto;
+	max-height: 100%;
+	max-width: 100%;
+}
+
+.post {
+	/*font:calibri;*/
+	/*font-family: 'Montserrat', sans-serif;*/
+	font-family: 'Gaegu', cursive;
+	/*margin-left: 8px;*/
+}
+
+.postwho{
+	/*font-family: 'Cute Font', cursive;*/
+	font-size: 20;
+	color: black;
+	/*margin-left: 8px;*/
+}
+.sbox{
+	max-width: 60%;
+}
+
+img.postavatar{
+	float: left;
+	max-width:50;
+	max-height:50;
+	margin-right: 10px;
+
+}
+img.smallavatar{
+	float: left;
+	max-width:30;
+	max-height:30;
+	margin-right: 10px;
+	margin-bottom: 10px;
+}
+img.commentavatar{
+	float:left;
+	margin-top: 3px;
+	max-width:20px;
+	max-height:20px;
+}
+
+.postarea{
+	font-size: 18px; 
+	width: 550;
+	max-width: 100%;
+}
+
+.posttime{
+	font-size: 15;
+	color: black;
+	margin-left: 8px;
+}
+
+.postbody{
+	padding-top: 10px;
+	font-size: 17;
+	color:black;
+}
+
+.postcomment{
+	padding-left: 10px;
+	font-size: 16px;
+	color:black;
+}
+
+.comm {
+	max-height: 256;
+	max-width: 256;
+	/*float: right;*/
+	margin-bottom: 20px;
+	margin-top: -13px;
+}
+
+.privateselect{
+	padding-right: 10px;
+}

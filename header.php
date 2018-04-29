@@ -37,7 +37,7 @@
                         echo "<li role=\"presentation\"><a href=\"userlist.php\">UserList</a></li>";
                     }
 
-                    echo "<li role=\"presentation\"><a href=\"send-message.php?receiver=<?php echo($userid); ?>\">Send Messages </a></li>";
+                    echo "<li role=\"presentation\"><a href=\"send-message.php?receiver=$userid\">Send Messages </a></li>";
                     echo "<li role=\"presentation\"><a href=\"logout.php\">Logout </a></li>";
                 } else {
                     echo "<li role=\"presentation\"><a href=\"create-account.php\">Register</a></li>";
