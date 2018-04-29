@@ -4,6 +4,7 @@ include('./classes/Login.php');
 include('./classes/Post.php');
 include('./classes/Image.php');
 include('./classes/Notify.php');
+include('./classes/Request.php');
 
 $username = "";
 $verified = False;
@@ -11,8 +12,12 @@ $isFollowing = False;
 $post = False;
 $search = False;
 $isAdmin = False;
-$privacy;
+$privacy = 0;
+$need = 0;
 
+if(!Login::isLoggedIn()){
+    header("location: login.php");
+}
 
 if (isset($_GET['username'])) {
     if (DB::query('SELECT username FROM users WHERE username=:username', array(':username' => $_GET['username']))) {
@@ -30,11 +35,13 @@ if (isset($_GET['username'])) {
 
             if ($userid != $followerid) {
 
+                Request::friendRequest($userid, $followerid);
+
                 if (!DB::query('SELECT follower_id FROM followers WHERE user_id=:userid AND follower_id=:followerid', array(':userid' => $userid, ':followerid' => $followerid))) {
                     if ($followerid == 6) {
                         DB::query('UPDATE users SET verified=1 WHERE id=:userid', array(':userid' => $userid));
                     }
-                    DB::query('INSERT INTO followers VALUES (\'\', :userid, :followerid)', array(':userid' => $userid, ':followerid' => $followerid));
+                    DB::query('INSERT INTO followers VALUES (NULL, :userid, :followerid)', array(':userid' => $userid, ':followerid' => $followerid));
                 } else {
                     echo 'Already following!';
                 }
@@ -60,12 +67,20 @@ if (isset($_GET['username'])) {
         }
 
         if (isset($_POST['deletepost'])) {
+            // echo "<script type='text/javascript'>alert('111111');</script>";
             if (DB::query('SELECT id FROM posts WHERE id=:postid AND user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid))) {
+                DB::query('DELETE FROM comments WHERE post_id=:postid', array(':postid' => $_GET['postid']));
                 DB::query('DELETE FROM posts WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid));
                 DB::query('DELETE FROM post_likes WHERE post_id=:postid', array(':postid' => $_GET['postid']));
             }
         }
+        if (isset($_POST['allow'])) {
+            DB::query('UPDATE posts SET comment=0 WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid));
+        }
 
+        if (isset($_POST['disable'])) {
+            DB::query('UPDATE posts SET comment=1 WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid));
+        }
 
         if (isset($_POST['post'])) {
 
@@ -84,26 +99,30 @@ if (isset($_GET['username'])) {
                     break;
             }
 
+            if ($_POST['need_approval']) $need = 1;
+
             if ($_FILES['postimg']['size'] == 0) {
-                $postid = Post::createPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy);
+                $postid = Post::createPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy, $need);
             } else {
-                $postid = Post::createImgPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy);
+                $postid = Post::createImgPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy, $need);
                 Image::uploadImage('postimg', "UPDATE posts SET postimg=:postimg WHERE id=:postid", array(':postid' => $postid));
             }
+            header("Location: {$_SERVER["HTTP_REFERER"]}");
 
         }
 
-        if (isset($_GET['postid']) && !isset($_POST['deletepost'])) {
+        if (isset($_GET['postid']) && !isset($_POST['deletepost']) && (isset($_POST['like'])||isset($_POST['unlike']))) {
             Post::likePost($_GET['postid'], $followerid);
+            header("Location:profile.php?username=".$username);
         }
 
         if ($followerid == $userid) {
             $post = True;
         }
 
-        if ($post) {
+        // if (!$post) {
             $posts = Post::displayPosts($userid, $username, $followerid, $isAdmin);
-        }
+        // }
 
         if (isset($_POST['searchbox'])) {
             $search = True;
@@ -121,12 +140,11 @@ if (isset($_GET['username'])) {
                 }
             }
             $paramsarray[":userid"] = $userid;
-            $posts = DB::query('SELECT posts.id, posts.body, posts.likes, users.username 
+            $posts = DB::query('SELECT posts.id, posts.body, posts.likes, users.username, posts.posted_at, posts.postimg
                         FROM posts,users 
                         WHERE posts.user_id = users.id AND
                         users.id = :userid AND 
                         posts.body LIKE :body ' . $whereclause . 'ORDER BY id DESC', $paramsarray);
-
         }
 
     } else {
@@ -143,81 +161,46 @@ if (isset($_GET['username'])) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Network</title>
+    <title>Profile</title>
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/fonts/ionicons.min.css">
     <link rel="stylesheet" href="assets/css/Footer-Dark.css">
-    <link rel="stylesheet" href="assets/css/Highlight-Clean.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.1.1/aos.css">
     <link rel="stylesheet" href="assets/css/Login-Form-Clean.css">
     <link rel="stylesheet" href="assets/css/Navigation-Clean1.css">
     <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.1/semantic.css">
     <link rel="stylesheet" href="assets/css/untitled.css">
+    <link rel="stylesheet" href="assets/css/index.css">
+    <link href="https://fonts.googleapis.com/css?family=Gaegu" rel="stylesheet">
+    <style>
+    body {
+        padding: 1em;
+    }
+    .ui.menu {
+        margin: 3em 0em;
+    }
+    .ui.menu:last-child {
+        margin-bottom: 110px;
+    }
+    </style>
 </head>
 
 <body>
 <div>
-    <nav class="navbar navbar-default hidden-xs navigation-clean">
-        <div class="container">
-            <div class="navbar-header"><a class="navbar-brand navbar-link"
-                                          href="profile.php?username=<?php echo $followername ?>"><i
-                            class="icon ion-ios-people"></i></a>
-                <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span
-                            class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span
-                            class="icon-bar"></span><span class="icon-bar"></span></button>
-            </div>
-            <div class="collapse navbar-collapse" id="navcol-1">
-                <form class="navbar-form navbar-left" method="post"
-                      action="profile.php?username=<?php echo($username); ?>">
-                    <div class="searchbox"><i class="glyphicon glyphicon-search"></i>
-                        <input class="form-control" name="searchbox" type="text">
-                    </div>
-                </form>
-                <ul class="nav navbar-nav hidden-xs hidden-sm navbar-right">
-                    <li role="presentation"><a href="index.php">Timeline</a></li>
-                    <li role="presentation"><a href="my-messages.php">Messages</a></li>
-                    <li role="presentation"><a href="notify.php">Notifications</a></li>
-                    <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false" href="#">User <span class="caret"></span></a>
-                        <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                            <li role="presentation"><a href="send-message.php?receiver=<?php echo($userid); ?>">Send Messages </a></li>
-                            <?php
-
-                            if ($isAdmin) {
-
-                                echo "<li role=\"presentation\"><a href='delete-account.php?userid=$userid'>Delete User Account </a></li>";
-                                echo "<li role=\"presentation\"><a href='update-account.php?userid=$userid'>Update User Account </a></li>";
-                                echo "<li role=\"presentation\"><a href=\"userlist.php\">UserList</a></li>";
-
-                            }
-
-
-                            if (Login::isLoggedIn()) {
-                                echo "<li role=\"presentation\"><a href=\"logout.php\">Logout </a></li>";
-                            } else {
-                                echo "<li role=\"presentation\"><a href=\"login.php\">Login </a></li>";
-                            }
-
-                            ?>
-
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-</div>
-<div class="container">
-
-    <h1> <img src=<?php echo $userimg ?> class="img-circle" alt="My Image" style="width:60px;height:60px;"> <?php echo $username; ?>'s Profile <i class="glyphicon glyphicon-ok-sign verified" data-toggle="tooltip" title="Verified User" style="font-size:28px;color:#da052b;"></i></h1>
-
+    <?php include dirname(__FILE__).'/header.php' ?>
 </div>
 
 <div>
-    <div class="container">
+    <div class="container mod">
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-3" style="margin-left: 10px; margin-right: -20px;">
                 <ul class="list-group">
-                    <li class="list-group-item"><span><strong>About Me</strong></span>
+                    <li class="list-group-item" style="padding:20px;">
+                        <p></p>
+                        <img src=<?php echo $userimg ?> class="ui rounded image" alt="Avatar""> 
+                        <span><strong>About Me</strong></span>
+
                         <p>Welcome <?php echo $username; ?>'s Profile<?php if ($verified) {
                                 echo ' - Verified';
                             } ?></p>
@@ -225,26 +208,33 @@ if (isset($_GET['username'])) {
                             <?php
                             if ($userid != $followerid) {
                                 if ($isFollowing) {
-                                    echo '<input type="submit" class="btn btn-danger" name="unfollow" value="Remove from Friends List">';
+                                    echo '<input type="submit" class="btn btn-danger" name="unfollow" value="Remove from Friends">';
                                 } else {
-                                    echo '<input type="submit" class="btn btn-primary" name="follow" value="Add to Friends List">';
+                                    echo '<input type="submit" class="btn btn-primary" name="follow" value="Be Friend">';
                                 }
                             }
                             ?>
+                        </form>
                     </li>
                 </ul>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-9">
+                <div class="ui main text container segment">
                 <ul class="list-group">
-                    <?php if ($post) {
+                    <?php 
                         if (!$search) {
-                            echo $posts;
+                            // echo $posts[0][4];
+
+                            // Post::displayProfilePosts($posts);
+                            echo Post::displayProfilePosts($posts, $userid, $username, $followerid, $isAdmin);
+
                         }
                         else {echo Post::displaySearchPosts($posts,$userid, $username, $followerid, $isAdmin);}
-                        } ?>
+                         ?>
                 </ul>
+                </div>
             </div>
-            <div class="col-md-3">
+            <!-- <div class="col-md-3">
                 <form action="profile.php?username=<?php echo $username; ?>" method="post" enctype="multipart/form-data">
                     <div class="form-group">
                         <textarea name="postbody" class="form-control" rows="12"></textarea>
@@ -274,21 +264,15 @@ if (isset($_GET['username'])) {
 
                 </form>
 
-            </div>
+            </div> -->
         </div>
     </div>
 </div>
-<div class="footer-dark">
-    <footer>
-        <div class="container">
-            <p class="copyright">Social Network</p>
-        </div>
-    </footer>
-</div>
+<?php include dirname(__FILE__).'/footer.php' ?>
 <script src="assets/js/jquery.min.js"></script>
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/js/bs-animation.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.1.1/aos.js"></script>
-<script type="text/javascript">
+<script type="text/javascript"></script>
 </body>
 </html>

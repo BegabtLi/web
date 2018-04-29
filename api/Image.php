@@ -29,7 +29,7 @@ class Image {
                 DB::query($query, $params);
 
         }
-        public static function uploadAvatar($formname, $query, $params) {
+        public static function uploadAvatar($formname) {
                 // $image = base64_encode(file_get_contents('file:///Users/oopsRiceLee/Desktop/Profile.jpg'));
                 // echo '<script type="text/javascript">alert('.$formname.');</script>';
                 $options = array('http'=>array(
