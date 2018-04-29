@@ -32,7 +32,7 @@ if (isset($_POST['updateaccount'])){
 
                                         DB::query('UPDATE users SET username = :username, password = :password,email = :email WHERE users.id = :userid', array(':username'=>$username,':password'=>password_hash($password, PASSWORD_BCRYPT),':email'=>$email,':userid'=>$userid));
                                         echo "Update User Account Successful!";
-                                        header("Location: profile.php?username=$username");
+//                                        header("Location: profile.php?username=$username");
                                 } else {
                                         echo 'Email in use!';
                                 }

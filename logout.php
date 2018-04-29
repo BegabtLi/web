@@ -33,6 +33,8 @@ if (isset($_POST['confirm'])) {
 <html>
 <head>
     <title>Logout</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/fonts/ionicons.min.css">
     <link rel="stylesheet" href="assets/css/Footer-Dark.css">
@@ -40,9 +42,22 @@ if (isset($_POST['confirm'])) {
     <link rel="stylesheet" href="assets/css/Login-Form-Clean.css">
     <link rel="stylesheet" href="assets/css/Navigation-Clean1.css">
     <link rel="stylesheet" href="assets/css/styles.css">
-<!--    <link rel="stylesheet" href="assets/css/message.css">-->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.1/semantic.css">
+    <link rel="stylesheet" href="assets/css/untitled.css">
+    <link rel="stylesheet" href="assets/css/index.css">
+    <link href="https://fonts.googleapis.com/css?family=Gaegu" rel="stylesheet">
+    <style>
+    body {
+        padding: 1em;
+    }
+    .ui.menu {
+        margin: 3em 0em;
+    }
+    .ui.menu:last-child {
+        margin-bottom: 110px;
+    }
+    </style>
 </head>
-
 <body>
 
 <div>
@@ -50,7 +65,8 @@ if (isset($_POST['confirm'])) {
 </div>
 
 <div class="container">
-    <h1>Logout of your Account ?</h1>
+    <p></p>
+    <div class="ui huge header">Comfirm to logout?</div>
     <hr>
     <br>
     <form action="logout.php" method="Post">
@@ -65,4 +81,5 @@ if (isset($_POST['confirm'])) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.1.1/aos.js"></script>
 </body>
 </html>
+
 

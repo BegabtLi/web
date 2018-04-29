@@ -2,6 +2,7 @@
 include('./classes/DB.php');
 include('./classes/Login.php');
 
+
 $isAdmin = False;
 if (Login::isLoggedIn()) {
     $userid = Login::isLoggedIn();
@@ -37,6 +38,8 @@ if (isset($_GET['mid'])) {
 <html>
 <head>
     <title>Messages</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/fonts/ionicons.min.css">
     <link rel="stylesheet" href="assets/css/Footer-Dark.css">
@@ -44,16 +47,33 @@ if (isset($_GET['mid'])) {
     <link rel="stylesheet" href="assets/css/Login-Form-Clean.css">
     <link rel="stylesheet" href="assets/css/Navigation-Clean1.css">
     <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.1/semantic.css">
+    <link rel="stylesheet" href="assets/css/untitled.css">
+    <link rel="stylesheet" href="assets/css/index.css">
+    <link href="https://fonts.googleapis.com/css?family=Gaegu" rel="stylesheet">
+    <style>
+    body {
+        padding: 1em;
+    }
+    .ui.menu {
+        margin: 3em 0em;
+    }
+    .ui.menu:last-child {
+        margin-bottom: 110px;
+    }
+    </style>
 </head>
 <body>
-
 <div>
     <?php include dirname(__FILE__).'/header.php' ?>
 </div>
 
 <div class="container">
-    <h1>My Messages</h1>
-    <hr/>
+    <p></p>
+    <div class="ui huge header">Messages</div>
+    <hr>
+    <br>
+    <div class="ui main text container segment">
     <?php
 
     $senders = DB::query('SELECT DISTINCT sender FROM messages WHERE receiver = :receiver', array(':receiver' => $userid));
@@ -79,6 +99,7 @@ if (isset($_GET['mid'])) {
     }
 }
 ?>
+</div>
 </div>
 
 <?php include dirname(__FILE__).'/footer.php' ?>

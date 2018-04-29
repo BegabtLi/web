@@ -1,6 +1,7 @@
 <?php
 require_once("DB.php");
 require_once("Mail.php");
+require_once('Image.php');
 
 $db = new DB("localhost:3308", "SocialNetwork", "root", "root");
 
@@ -43,16 +44,23 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
     }
 
 } else if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    // echo $_GET['url'];
-    if ($_GET['url'] == "users") {
 
+    if ($_GET['url'] == "users") {
+        // echo $_POST['username'];
         $postBody = file_get_contents("php://input");
         $postBody = json_decode($postBody);
 
         $username = $postBody->username;
         $email = $postBody->email;
         $password = $postBody->password;
-
+        $profileimg = $postBody->profileimg;
+        // echo $postBody->profileimg;
+        // echo Image::uploadAvatar($profileimg,0,0);
+        // echo $profileimg;
+        // if($profileimg){
+        //     Image::uploadAvatar($profileimg, "UPDATE users SET profileimg=:profileimg WHERE id=:id", array(':id' => '33'));
+        // }
+        // echo 111;
 
         if (!$db->query('SELECT username FROM users WHERE username=:username', array(':username' => $username))) {
 
@@ -77,6 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
                                 setcookie("SNID", $token, time() + 60 * 60 * 24 * 7, '/', NULL, NULL, TRUE);
                                 setcookie("SNID_", '1', time() + 60 * 60 * 24 * 3, '/', NULL, NULL, TRUE);
                                 // header('location: index.php');
+                                if (strlen($profileimg) > 70) {
+                                    //     Image::uploadAvatar($profileimg, "UPDATE users SET profileimg=:profileimg WHERE id=:id", array(':id' => $user_id));
+                                    // }
+                                    $newImg = Image::uploadAvatar($profileimg);
+
+                                }
+                                else{
+                                    $newImg = 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png';
+                                }
+                                $db->query("UPDATE users SET profileimg=:profileimg WHERE id=:id", array(':id' => $user_id, ':profileimg' => $newImg));
                                 echo 'SUCESS';
                                 // exit();
                             } else {
@@ -108,8 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 
     }
 
-
-
     if ($_GET['url'] == "auth") {
 
         $postBody = file_get_contents("php://input");
@@ -123,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
                 $cstrong = True;
                 $token = bin2hex(openssl_random_pseudo_bytes(64, $cstrong));
                 $user_id = $db->query('SELECT id FROM users WHERE username=:username', array(':username' => $username))[0]['id'];
-                $db->query('INSERT INTO login_tokens VALUES (\'\', :token, :user_id)', array(':token' => sha1($token), ':user_id' => $user_id));
+                $db->query('INSERT INTO login_tokens VALUES (NULL, :token, :user_id)', array(':token' => sha1($token), ':user_id' => $user_id));
                 echo $username;
 
 
@@ -135,6 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
             echo 'Error';
             http_response_code(401);
         }
+
 
     }
 
