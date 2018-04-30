@@ -1,0 +1,31 @@
+.img-thumbnail img{
+    width:100%;
+}
+.img-thumbnail{
+    padding:0;
+}
+.img-thumbnail .caption{
+    padding:9px;
+}
+.card .row{
+    padding:9px;
+}
+
+#delete {
+    display:inline;
+}
+
+.navbar-toggler .navbar-toggler-icon {
+  /*color: #ecf0f1;*/
+  height: 20px !important;
+  width: 20px !important;
+}
+
+.padGroup{
+    padding-top:1em;
+}
+
+.text-left .btn{
+    margin: 5px;
+    margin-top: 15px;
+}
