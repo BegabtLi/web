@@ -96,7 +96,6 @@ class Post
 
     public static function link_add($text)
     {
-//        return $text;
         $text = explode(" ", $text);
         $newstring = "";
 
@@ -110,95 +109,97 @@ class Post
             }
         }
 
-        return $newstring ;
+        return $newstring;
     }
 
-    public static function displaySearchPosts($dbposts,$userid, $username, $loggedInUserId,$isAdmin){
+    public static function displaySearchPosts($dbposts, $userid, $username, $loggedInUserId, $isAdmin)
+    {
 
         $posts = "";
 
-        foreach(array_reverse($dbposts) as $p) {
-            if($p['postimg']){
-                $posts .= "<img src='".$p['postimg']."'class=\"imgprofile img-rounded\">";
+        foreach (array_reverse($dbposts) as $p) {
+            if ($p['postimg']) {
+                $posts .= "<img src='" . $p['postimg'] . "'class=\"imgprofile img-rounded\">";
             }
-            $posts .= "<p class='post postbody'>".self::link_add($p['body'])."</p>";
-            $posts .= "<p class='post posttime' style='margin-left:0px'>Posted at ".$p['posted_at']."</p>";
-            $posts .= "<form class=\"form-group\" action='profile.php?username=$username&postid=".$p['id']."' method='post'>";
-            $posts .= "<p style:'text-align:right;' class='post posttime'>Posted at ".$p['posted_at']."</p>";
-            if (!DB::query('SELECT post_id FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid'=>$p['id'], ':userid'=>$loggedInUserId))) {
-                                // $posts .= "<input class=\"btn btn-danger\" type='submit' name='like' value='Like'>";
+            $posts .= "<p class='post postbody'>" . self::link_add($p['body']) . "</p>";
+            $posts .= "<p class='post posttime' style='margin-left:0px'>Posted at " . $p['posted_at'] . "</p>";
+            $posts .= "<form class=\"form-group\" action='profile.php?username=$username&postid=" . $p['id'] . "' method='post'>";
+            $posts .= "<p style:'text-align:right;' class='post posttime'>Posted at " . $p['posted_at'] . "</p>";
+            if (!DB::query('SELECT post_id FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid' => $p['id'], ':userid' => $loggedInUserId))) {
+                // $posts .= "<input class=\"btn btn-danger\" type='submit' name='like' value='Like'>";
                 $posts .= '<div class="ui labeled button" tabindex="0">';
-                                $posts .= '<button type="submit" class="small ui button" name="like">
+                $posts .= '<button type="submit" class="small ui button" name="like">
                                             <i class="heart icon"></i> Like
                                             </button>';
-                                // $posts .= "<span class=\"text-danger\">".$p['likes']." likes</span>";
-                                $posts .= '<a class="ui basic label">'.$p['likes'].'</a></div>';
+                // $posts .= "<span class=\"text-danger\">".$p['likes']." likes</span>";
+                $posts .= '<a class="ui basic label">' . $p['likes'] . '</a></div>';
 
-                        } else {
-                                // $posts .= "<input class=\"btn btn-danger\" type='submit' name='like' value='Like'>";
-                                $posts .= '<div class="ui labeled button" tabindex="0">';
-                                $posts .= '<button type="submit" class="small ui red button" name="unlike">
+            } else {
+                // $posts .= "<input class=\"btn btn-danger\" type='submit' name='like' value='Like'>";
+                $posts .= '<div class="ui labeled button" tabindex="0">';
+                $posts .= '<button type="submit" class="small ui red button" name="unlike">
                                             <i class="heart icon"></i> Unlike
                                             </button>';
-                                // $posts .= "<span class=\"text-danger\">".$p['likes']." likes</span>";
-                                $posts .= '<a class="ui basic red left pointing label">'.$p['likes'].'</a></div>';
-                        }
-                        if ($userid == $loggedInUserId) {
-                                $posts .= "<button class='tiny ui basic button'  type='submit' name='deletepost'><span class='glyphicon glyphicon-trash'></span> Delete</button>";
-                        }
-                        $posts .= "</form><hr /></br />";
-                }
-                return $posts;
+                // $posts .= "<span class=\"text-danger\">".$p['likes']." likes</span>";
+                $posts .= '<a class="ui basic red left pointing label">' . $p['likes'] . '</a></div>';
+            }
+            if ($userid == $loggedInUserId) {
+                $posts .= "<button class='tiny ui basic button'  type='submit' name='deletepost'><span class='glyphicon glyphicon-trash'></span> Delete</button>";
+            }
+            $posts .= "</form><hr /></br />";
+        }
+        return $posts;
 
 
+    }
 
-         }
-        public static function displayProfilePosts($posts, $userid, $username, $loggedInUserId,$isAdmin) {
-            foreach (array_reverse($posts) as $post) {
-                echo "<div class=\"lead text-primary\">";
-                echo "<img src='".$post['postimg']."' class=\"ui rounded image imgprofile\" >";
-                echo "<p class='post postbody'>".self::link_add($post['body']) . "</p></div>";
-                echo "<p class='post posttime' style='margin-left:0px'>Posted at ".$post['posted_at']."</p>";
-                echo "<form action='profile.php?username=$username&postid=" . $post['id'] . "' class=\"form-group\" method='post'>";
+    public static function displayProfilePosts($posts, $userid, $username, $loggedInUserId, $isAdmin)
+    {
+        foreach (array_reverse($posts) as $post) {
+            echo "<div class=\"lead text-primary\">";
+            echo "<img src='" . $post['postimg'] . "' class=\"ui rounded image imgprofile\" >";
+            echo "<p class='post postbody'>" . self::link_add($post['body']) . "</p></div>";
+            echo "<p class='post posttime' style='margin-left:0px'>Posted at " . $post['posted_at'] . "</p>";
+            echo "<form action='profile.php?username=$username&postid=" . $post['id'] . "' class=\"form-group\" method='post'>";
 
-                if (!DB::query('SELECT post_id FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid' => $post['id'], ':userid' => $loggedInUserId))) {
+            if (!DB::query('SELECT post_id FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid' => $post['id'], ':userid' => $loggedInUserId))) {
 
-                    echo '<div class="ui labeled button" tabindex="0">';
-                    echo '<button type="submit" class="small ui button" name="like">
+                echo '<div class="ui labeled button" tabindex="0">';
+                echo '<button type="submit" class="small ui button" name="like">
                             <i class="heart icon"></i> Like
                             </button>';
-                    echo '<a class="ui basic label">'.$post['likes'].'</a></div>';
-                } else {
+                echo '<a class="ui basic label">' . $post['likes'] . '</a></div>';
+            } else {
 
-                    echo '<div class="ui labeled button" tabindex="0">';
-                    echo '<button type="submit" class="small ui red button" name="unlike">
+                echo '<div class="ui labeled button" tabindex="0">';
+                echo '<button type="submit" class="small ui red button" name="unlike">
                             <i class="heart icon"></i> unLike
                             </button>';
-                    echo '<a class="ui basic red left pointing label">'.$post['likes'].'</a></div>';
+                echo '<a class="ui basic red left pointing label">' . $post['likes'] . '</a></div>';
+            }
+            if ($userid == $loggedInUserId || $isAdmin) {
+                echo "<button class='tiny ui basic button'  type='submit' name='deletepost'><span class='glyphicon glyphicon-trash'></span> Delete</button>";
+
+                if ($post['comment'] == 1) {
+                    echo "</hr /><input class=\"ui basic green button\"  type='submit' name='allow' value='Allow comment by others' />";
+                } else {
+                    echo "</hr /><input class=\"ui basic red button\"  type='submit' name='disable' value='Disable comments' />";
                 }
-                if ($userid == $loggedInUserId || $isAdmin) {
-                    echo "<button class='tiny ui basic button'  type='submit' name='deletepost'><span class='glyphicon glyphicon-trash'></span> Delete</button>";
-
-                    if ($post['comment'] == 1) {
-                        echo "</hr /><input class=\"ui basic green button\"  type='submit' name='allow' value='Allow comment by others' />";
-                    } else {
-                        echo "</hr /><input class=\"ui basic red button\"  type='submit' name='disable' value='Disable comments' />";
-                    }
-                }
-
-                echo "</form>";
-                echo "<form action='profile.php?username=$username&postid=" . $post['id'] . "' class=\"form-group\"  method='post'  enctype=\"multipart/form-data\">";
-                echo "<input  class=\"autocomplete form-control\" name='commentbody' rows='3' cols='50'></input>";
-                echo "<div class=\"post form-group\"><p style='margin-bottom:-10px;'>Press enter to post</p><span>Upload image or video:</span>";
-                echo "<span class=\"form-group\">";
-                echo "<input type=\"file\" class=\"ui inverted button\" name=\"commentimg\"></span></div>";
-                echo "<div class=\"form-group hidden\" ><input type='submit' name='comment' class=\"btn btn-success\" value='Comment'></div></form>";
-                echo Comment::displayComments($post['id']);
-                echo "<p></p><hr>";
-
             }
 
+            echo "</form>";
+            echo "<form action='profile.php?username=$username&postid=" . $post['id'] . "' class=\"form-group\"  method='post'  enctype=\"multipart/form-data\">";
+            echo "<input  class=\"autocomplete form-control\" name='commentbody' rows='3' cols='50'></input>";
+            echo "<div class=\"post form-group\"><p style='margin-bottom:-10px;'>Press enter to post</p><span>Upload image or video:</span>";
+            echo "<span class=\"form-group\">";
+            echo "<input type=\"file\" class=\"ui inverted button\" name=\"commentimg\"></span></div>";
+            echo "<div class=\"form-group hidden\" ><input type='submit' name='comment' class=\"btn btn-success\" value='Comment'></div></form>";
+            echo Comment::displayComments($post['id']);
+            echo "<p></p><hr>";
+
         }
+
+    }
 
     public static function getPosts($userid, $loggedInUserId, $isAdmin)
     {

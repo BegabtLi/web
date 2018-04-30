@@ -1,6 +1,5 @@
 <?php
 require_once("DB.php");
-require_once("Mail.php");
 require_once('Image.php');
 
 $db = new DB("localhost", "SocialNetwork", "root", "root");
@@ -46,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 } else if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
     if ($_GET['url'] == "users") {
-        // echo $_POST['username'];
         $postBody = file_get_contents("php://input");
         $postBody = json_decode($postBody);
 
@@ -54,13 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
         $email = $postBody->email;
         $password = $postBody->password;
         $profileimg = $postBody->profileimg;
-        // echo $postBody->profileimg;
-        // echo Image::uploadAvatar($profileimg,0,0);
-        // echo $profileimg;
-        // if($profileimg){
-        //     Image::uploadAvatar($profileimg, "UPDATE users SET profileimg=:profileimg WHERE id=:id", array(':id' => '33'));
-        // }
-        // echo 111;
 
         if (!$db->query('SELECT username FROM users WHERE username=:username', array(':username' => $username))) {
 
@@ -75,7 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
                             if (!$db->query('SELECT email FROM users WHERE email=:email', array(':email' => $email))) {
 
                                 $db->query('INSERT INTO users VALUES (NULL, :username, :password, :email, \'0\', \'\')', array(':username' => $username, ':password' => password_hash($password, PASSWORD_BCRYPT), ':email' => $email));
-                                Mail::sendMail('Welcome to our Social Network!', 'Your account has been created!', $email);
 
                                 //http_response_code(200);
                                 $cstrong = True;
@@ -84,14 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
                                 $db->query('INSERT INTO login_tokens VALUES (NULL, :token, :user_id)', array(':token' => sha1($token), ':user_id' => $user_id));
                                 setcookie("SNID", $token, time() + 60 * 60 * 24 * 7, '/', NULL, NULL, TRUE);
                                 setcookie("SNID_", '1', time() + 60 * 60 * 24 * 3, '/', NULL, NULL, TRUE);
-                                // header('location: index.php');
                                 if (strlen($profileimg) > 70) {
-                                    //     Image::uploadAvatar($profileimg, "UPDATE users SET profileimg=:profileimg WHERE id=:id", array(':id' => $user_id));
-                                    // }
                                     $newImg = Image::uploadAvatar($profileimg);
-
-                                }
-                                else{
+                                } else {
                                     $newImg = 'http://s3.amazonaws.com/37assets/svn/765-default-avatar.png';
                                 }
                                 $db->query("UPDATE users SET profileimg=:profileimg WHERE id=:id", array(':id' => $user_id, ':profileimg' => $newImg));

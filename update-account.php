@@ -1,65 +1,51 @@
-<!--<h1>Register</h1>-->
-<!--<form action="create-account.php" method="post">-->
-<!--<input type="text" name="username" value="" placeholder="Username ..."><p />-->
-<!--<input type="password" name="password" value="" placeholder="Password ..."><p />-->
-<!--<input type="email" name="email" value="" placeholder="someone@somesite.com"><p />-->
-<!--<input type="submit" name="createaccount" value="Create Account">-->
-<!--</form>-->
-
 <?php
 
 include('classes/DB.php');
 
 $userid = $_GET['userid'];
 
-$username = $_POST['username'];
-$password = $_POST['password'];
-$email = $_POST['email'];
+if (isset($_POST['updateaccount'])) {
 
-if (isset($_POST['updateaccount'])){
+    if (DB::query('SELECT username FROM users WHERE id = :userid', array(':userid' => $userid))) {
 
- if (DB::query('SELECT username FROM users WHERE id = :userid', array(':userid'=>$userid))) {
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+        $email = $_POST['email'];
 
-                if (strlen($username) >= 3 && strlen($username) <= 32) {
+        if (strlen($username) >= 3 && strlen($username) <= 32) {
 
-                        if (preg_match('/[a-zA-Z0-9_]+/', $username)) {
+            if (preg_match('/[a-zA-Z0-9_]+/', $username)) {
 
-                                if (strlen($password) >= 6 && strlen($password) <= 60) {
+                if (strlen($password) >= 6 && strlen($password) <= 60) {
 
-                                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
-                                if (!DB::query('SELECT email FROM users WHERE email=:email', array(':email'=>$email))) {
+                        if (!DB::query('SELECT email FROM users WHERE email=:email', array(':email' => $email))) {
 
-                                        DB::query('UPDATE users SET username = :username, password = :password,email = :email WHERE users.id = :userid', array(':username'=>$username,':password'=>password_hash($password, PASSWORD_BCRYPT),':email'=>$email,':userid'=>$userid));
-                                        echo "Update User Account Successful!";
-//                                        header("Location: profile.php?username=$username");
-                                } else {
-                                        echo 'Email in use!';
-                                }
+                            DB::query('UPDATE users SET username = :username, password = :password,email = :email WHERE users.id = :userid', array(':username' => $username, ':password' => password_hash($password, PASSWORD_BCRYPT), ':email' => $email, ':userid' => $userid));
+                            echo "Update User Account Successful!";
                         } else {
-                                        echo 'Invalid email!';
-                                }
-                        } else {
-                                echo 'Invalid password!';
+                            echo 'Email in use!';
                         }
-                        } else {
-                                echo 'Invalid username';
-                        }
+                    } else {
+                        echo 'Invalid email!';
+                    }
                 } else {
-                        echo 'Invalid username';
+                    echo 'Invalid password!';
                 }
-
+            } else {
+                echo 'Invalid username';
+            }
         } else {
-                echo 'User dost not exist!';
+            echo 'Invalid username';
         }
 
-        
-
+    } else {
+        echo 'User dost not exist!';
+    }
 
 
 }
-
-
 
 
 ?>
@@ -81,7 +67,7 @@ if (isset($_POST['updateaccount'])){
 
 <body>
 <div class="login-clean">
-    <form method="post" action="update-account.php?userid=<?php echo($userid);  ?>">
+    <form method="post" action="update-account.php?userid=<?php echo($userid); ?>">
         <h2 class="sr-only">Update User Account</h2>
         <div class="illustration"><i class="icon ion-android-refresh"></i></div>
         <div class="form-group">
@@ -94,10 +80,7 @@ if (isset($_POST['updateaccount'])){
             <input class="form-control" id="password" type="password" name="password" placeholder="Password">
         </div>
         <div class="form-group">
-            <input type="submit" class="btn btn-primary btn-block" name="updateaccount" value="Update Account"></input>
-            <!-- <button class="btn btn-primary btn-block" id="ca" type="button" data-bs-hover-animate="shake" name="updateaccount">
-               Update User Account -->
-            </button>
+            <input type="submit" class="btn btn-primary btn-block" name="updateaccount" value="Update Account">
         </div>
     </form>
 </div>
@@ -160,33 +143,6 @@ if (isset($_POST['updateaccount'])){
     $("#password").focusin(validatePassword);
     $("#password").change(validatePassword);
     $("#password").keyup(validatePassword);
-
-    // $('#ca').click(function () {
-
-    //     $.ajax({
-
-    //         type: "POST",
-    //         url: "api/update",
-    //         processData: false,
-    //         contentType: "application/json",
-    //         data: '{ "userid": "' +<?php echo $_GET['userid'];  ?>  + '","username": "' + $("#username").val() + '", "email": "' + $("#email").val() + '", "password": "' + $("#password").val() + '" }',
-    //         success: function (r) {
-    //             if (r == "SUCESS")
-    //                 window.location = "index.php";
-    //         },
-    //         error: function (r) {
-    //             console.log(r)
-    //             console.log("999");
-    //             setTimeout(function () {
-    //                 $('[data-bs-hover-animate]').removeClass('animated ' + $('[data-bs-hover-animate]').attr('data-bs-hover-animate'));
-    //             }, 2000)
-    //             $('[data-bs-hover-animate]').addClass('animated ' + $('[data-bs-hover-animate]').attr('data-bs-hover-animate'))
-
-    //         }
-
-    //     });
-
-    // });
 </script>
 </body>
 

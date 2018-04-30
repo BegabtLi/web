@@ -1,63 +1,57 @@
 <?php
-class Image {
 
-        public static function uploadImage($formname, $query, $params) {
-                $image = base64_encode(file_get_contents($_FILES[$formname]['tmp_name']));
+class Image
+{
 
-                $options = array('http'=>array(
-                        'method'=>"POST",
-                        'header'=>"Authorization: Bearer 4f93958651e3b07144c1c28ac8200f161a920e2b\n".
-                        "Content-Type: application/x-www-form-urlencoded",
-                        'content'=>$image
-                ));
+    public static function uploadImage($formname, $query, $params)
+    {
+        $image = base64_encode(file_get_contents($_FILES[$formname]['tmp_name']));
 
-                $context = stream_context_create($options);
+        $options = array('http' => array(
+            'method' => "POST",
+            'header' => "Authorization: Bearer 4f93958651e3b07144c1c28ac8200f161a920e2b\n" .
+                "Content-Type: application/x-www-form-urlencoded",
+            'content' => $image
+        ));
 
-                $imgurURL = "https://api.imgur.com/3/image";
+        $context = stream_context_create($options);
 
-                if ($_FILES[$formname]['size'] > 10240000) {
-                        die('Image too big, must be 10MB or less!');
-                }
+        $imgurURL = "https://api.imgur.com/3/image";
 
-                $response = file_get_contents($imgurURL, false, $context);
-                $response = json_decode($response);
-
-                $preparams = array($formname=>$response->data->link);
-
-                $params = $preparams + $params;
-
-                DB::query($query, $params);
-
+        if ($_FILES[$formname]['size'] > 10240000) {
+            die('Image too big, must be 10MB or less!');
         }
-        public static function uploadAvatar($formname) {
-                // $image = base64_encode(file_get_contents('file:///Users/oopsRiceLee/Desktop/Profile.jpg'));
-                // echo '<script type="text/javascript">alert('.$formname.');</script>';
-                $options = array('http'=>array(
-                        'method'=>"POST",
-                        'header'=>"Authorization: Bearer 4f93958651e3b07144c1c28ac8200f161a920e2b\n".
-                        "Content-Type: application/x-www-form-urlencoded",
-                        'content'=>$formname
-                ));
 
-                $context = stream_context_create($options);
+        $response = file_get_contents($imgurURL, false, $context);
+        $response = json_decode($response);
 
-                $imgurURL = "https://api.imgur.com/3/image.json";
+        $preparams = array($formname => $response->data->link);
 
-                // if ($formname['size'] > 10240000) {
-                //         die('Image too big, must be 10MB or less!');
-                // }
+        $params = $preparams + $params;
 
-                $response = file_get_contents($imgurURL, false, $context);
-                $response = json_decode($response);
+        DB::query($query, $params);
 
-                $preparams = array('profileimg'=>$response->data->link);
+    }
 
-                // $params = $preparams + $params;
+    public static function uploadAvatar($formname)
+    {
+        $options = array('http' => array(
+            'method' => "POST",
+            'header' => "Authorization: Bearer 4f93958651e3b07144c1c28ac8200f161a920e2b\n" .
+                "Content-Type: application/x-www-form-urlencoded",
+            'content' => $formname
+        ));
 
-                // DB::query($query, $params);
-                return $response->data->link;
+        $context = stream_context_create($options);
 
-        }
+        $imgurURL = "https://api.imgur.com/3/image.json";
+
+        $response = file_get_contents($imgurURL, false, $context);
+        $response = json_decode($response);
+        return $response->data->link;
+
+    }
 
 }
+
 ?>

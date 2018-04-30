@@ -37,12 +37,11 @@ if (isset($_POST['send'])) {
     <link rel="stylesheet" href="assets/css/Login-Form-Clean.css">
     <link rel="stylesheet" href="assets/css/Navigation-Clean1.css">
     <link rel="stylesheet" href="assets/css/styles.css">
-<!--    <link rel="stylesheet" href="assets/css/message.css">-->
 </head>
 <body>
 
 <div>
-    <?php include dirname(__FILE__).'/header.php' ?>
+    <?php include dirname(__FILE__) . '/header.php' ?>
 </div>
 
 <div class="container">
@@ -55,7 +54,7 @@ if (isset($_POST['send'])) {
 </div>
 
 
-<?php include dirname(__FILE__).'/footer.php' ?>
+<?php include dirname(__FILE__) . '/footer.php' ?>
 <script src="assets/js/jquery.min.js"></script>
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/js/bs-animation.js"></script>

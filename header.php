@@ -20,13 +20,13 @@
                     echo "<li role=\"presentation\"><a href=\"my-messages.php\">Messages</a></li>";
                     echo "<li role=\"presentation\"><a href=\"notify.php\">Notifications</a></li>";
 
-                if ($isAdmin) {
-                    echo "<li class=\"dropdown\"><a class=\"dropdown-toggle\" data-toggle=\"dropdown\" aria-expanded=\"false\" href=\"#\">Admin<span class=\"caret\"></span></a>";
-                } else {
-                    echo "<li class=\"dropdown\"><a class=\"dropdown-toggle\" data-toggle=\"dropdown\" aria-expanded=\"false\" href=\"javascript:void(0);\" id=\"userdrop1\" aria-haspopup=\"true\">User<span class=\"caret\"></span></a>";
-                }
+                    if ($isAdmin) {
+                        echo "<li class=\"dropdown\"><a class=\"dropdown-toggle\" data-toggle=\"dropdown\" aria-expanded=\"false\" href=\"#\">Admin<span class=\"caret\"></span></a>";
+                    } else {
+                        echo "<li class=\"dropdown\"><a class=\"dropdown-toggle\" data-toggle=\"dropdown\" aria-expanded=\"false\" href=\"javascript:void(0);\" id=\"userdrop1\" aria-haspopup=\"true\">User<span class=\"caret\"></span></a>";
+                    }
 
-                echo "<ul class=\"dropdown-menu dropdown-menu-right\" role=\"menu\">";
+                    echo "<ul class=\"dropdown-menu dropdown-menu-right\" role=\"menu\">";
 
                     if ($isAdmin) {
                         echo "<li role=\"presentation\"><a href='delete-account.php?userid=$userid'>Delete User Account </a></li>";

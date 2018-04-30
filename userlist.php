@@ -28,11 +28,12 @@ if (Login::isLoggedIn()) {
 <body>
 
 <div>
-    <?php include dirname(__FILE__).'/header.php' ?>
+    <?php include dirname(__FILE__) . '/header.php' ?>
 </div>
 
 <div class="container">
-    <h1>Manage Users</h1><hr/>
+    <h1>Manage Users</h1>
+    <hr/>
 
     <ul class="list-group">
         <?php
@@ -47,7 +48,7 @@ if (Login::isLoggedIn()) {
     </ul>
 </div>
 
-<?php include dirname(__FILE__).'/footer.php' ?>
+<?php include dirname(__FILE__) . '/footer.php' ?>
 <script src="assets/js/jquery.min.js"></script>
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/js/bs-animation.js"></script>

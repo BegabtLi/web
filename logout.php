@@ -47,21 +47,23 @@ if (isset($_POST['confirm'])) {
     <link rel="stylesheet" href="assets/css/index.css">
     <link href="https://fonts.googleapis.com/css?family=Gaegu" rel="stylesheet">
     <style>
-    body {
-        padding: 1em;
-    }
-    .ui.menu {
-        margin: 3em 0em;
-    }
-    .ui.menu:last-child {
-        margin-bottom: 110px;
-    }
+        body {
+            padding: 1em;
+        }
+
+        .ui.menu {
+            margin: 3em 0em;
+        }
+
+        .ui.menu:last-child {
+            margin-bottom: 110px;
+        }
     </style>
 </head>
 <body>
 
 <div>
-    <?php include dirname(__FILE__).'/header.php' ?>
+    <?php include dirname(__FILE__) . '/header.php' ?>
 </div>
 
 <div class="container">
@@ -74,7 +76,7 @@ if (isset($_POST['confirm'])) {
     </form>
 </div>
 
-<?php include dirname(__FILE__).'/footer.php' ?>
+<?php include dirname(__FILE__) . '/footer.php' ?>
 <script src="assets/js/jquery.min.js"></script>
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/js/bs-animation.js"></script>

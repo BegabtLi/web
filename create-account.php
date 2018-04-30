@@ -23,8 +23,6 @@ include('./classes/DB.php');
 
 <body>
 <script>
-    var imgLink = "http://s3.amazonaws.com/37assets/svn/765-default-avatar.png";
-
     function readURL(input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
@@ -127,46 +125,48 @@ include('./classes/DB.php');
     $("#password").keyup(validatePassword);
 
 
+    function emailValidate() {
+        $("span").remove("#span-email");
+        if ($("#email").val().length < 1)
+            $("#email").after("<span id='span-email' class='error'>Email is Mandatory</span>");
+        else if (!(/^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/.test($("#email").val())))
+            $("#email").after("<span id='span-email' class='info'>Please input valid email address!</span>");
+        else
+            $("#email").after("<span id='span-email' class='info'>OK</span>");
+    }
 
-      function emailValidate() {
-    $("span").remove("#span-email");
-    if($("#email").val().length < 1)
-        $("#email").after("<span id='span-email' class='error'>Email is Mandatory</span>");
-    else if(!(/^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/.test($("#email").val())))
-        $("#email").after("<span id='span-email' class='info'>Please input valid email address!</span>");
-    else
-        $("#email").after("<span id='span-email' class='info'>OK</span>");
-}
-
-    $("#email").focus(function(){emailValidate();});
-    $("#email").change(function(){emailValidate();});
-    $("#email").keyup(function(){emailValidate();});
+    $("#email").focus(function () {
+        emailValidate();
+    });
+    $("#email").change(function () {
+        emailValidate();
+    });
+    $("#email").keyup(function () {
+        emailValidate();
+    });
 
     $('#ca').click(function (event) {
         $.ajax({
 
             type: "POST",
             url: "api/users",
-            // url: "add-account.php",
             processData: false,
             contentType: "application/json",
-            // contentType: false,
             data: '{ "username": "' + $("#username").val() + '", "email": "' + $("#email").val() + '", "password": "' + $("#password").val() + '", "profileimg": "' + $('#avatar').attr('src').substring($('#avatar').attr('src').indexOf('base64') + 7) + '" }',
-            // data: formData,
             success: function (r) {
 
-                if (r = "SUCESS") {
+                if (r == "SUCESS") {
                     window.location = "index.php";
                 }
 
             },
             error: function (r) {
+                alert(r.responseText)
                 setTimeout(function () {
                     $('[data-bs-hover-animate]').removeClass('animated ' + $('[data-bs-hover-animate]').attr('data-bs-hover-animate'));
                 }, 2000)
                 $('[data-bs-hover-animate]').addClass('animated ' + $('[data-bs-hover-animate]').attr('data-bs-hover-animate'))
                 console.log(r)
-                alert(r.responseText)
             }
 
         });
@@ -176,4 +176,3 @@ include('./classes/DB.php');
 </body>
 
 </html>
-

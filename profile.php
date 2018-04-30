@@ -15,7 +15,7 @@ $isAdmin = False;
 $privacy = 0;
 $need = 0;
 
-if(!Login::isLoggedIn()){
+if (!Login::isLoggedIn()) {
     header("location: login.php");
 }
 
@@ -24,7 +24,7 @@ if (isset($_GET['username'])) {
 
         $username = DB::query('SELECT username FROM users WHERE username=:username', array(':username' => $_GET['username']))[0]['username'];
         $userid = DB::query('SELECT id FROM users WHERE username=:username', array(':username' => $_GET['username']))[0]['id'];
-        $userimg =  DB::query('SELECT profileimg FROM users WHERE username=:username', array(':username' => $_GET['username']))[0]['profileimg'];
+        $userimg = DB::query('SELECT profileimg FROM users WHERE username=:username', array(':username' => $_GET['username']))[0]['profileimg'];
         $verified = DB::query('SELECT verified FROM users WHERE username=:username', array(':username' => $_GET['username']))[0]['verified'];
         $followerid = Login::isLoggedIn();
         $followername = DB::query('SELECT username FROM users WHERE id = :userid', array(':userid' => $followerid))[0]['username'];
@@ -67,7 +67,6 @@ if (isset($_GET['username'])) {
         }
 
         if (isset($_POST['deletepost'])) {
-            // echo "<script type='text/javascript'>alert('111111');</script>";
             if ($isAdmin) {
                 DB::query('DELETE FROM posts WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $userid));
             }
@@ -85,9 +84,9 @@ if (isset($_GET['username'])) {
             DB::query('UPDATE posts SET comment=1 WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid));
         }
 
-        if (isset($_GET['postid']) && !isset($_POST['deletepost']) && (isset($_POST['like'])||isset($_POST['unlike']))) {
+        if (isset($_GET['postid']) && !isset($_POST['deletepost']) && (isset($_POST['like']) || isset($_POST['unlike']))) {
             Post::likePost($_GET['postid'], $followerid);
-            header("Location:profile.php?username=".$username);
+            header("Location:profile.php?username=" . $username);
         }
 
 
@@ -143,21 +142,23 @@ if (isset($_GET['username'])) {
     <link rel="stylesheet" href="assets/css/index.css">
     <link href="https://fonts.googleapis.com/css?family=Gaegu" rel="stylesheet">
     <style>
-    body {
-        padding: 1em;
-    }
-    .ui.menu {
-        margin: 3em 0em;
-    }
-    .ui.menu:last-child {
-        margin-bottom: 110px;
-    }
+        body {
+            padding: 1em;
+        }
+
+        .ui.menu {
+            margin: 3em 0em;
+        }
+
+        .ui.menu:last-child {
+            margin-bottom: 110px;
+        }
     </style>
 </head>
 
 <body>
 <div>
-    <?php include dirname(__FILE__).'/header.php' ?>
+    <?php include dirname(__FILE__) . '/header.php' ?>
 </div>
 
 <div>
@@ -189,25 +190,24 @@ if (isset($_GET['username'])) {
             </div>
             <div class="col-md-9">
                 <div class="ui main text container segment">
-                <ul class="list-group">
-                    <?php 
+                    <ul class="list-group">
+                        <?php
                         if (!$search) {
 
                             echo Post::displayProfilePosts($posts, $userid, $username, $followerid, $isAdmin);
 
+                        } else {
+                            echo Post::displaySearchPosts($posts, $userid, $username, $followerid, $isAdmin);
                         }
-                        else {
-                            echo Post::displaySearchPosts($posts,$userid, $username, $followerid, $isAdmin);
-                        }
-                    ?>
-                </ul>
+                        ?>
+                    </ul>
                 </div>
             </div>
-  
+
         </div>
     </div>
 </div>
-<?php include dirname(__FILE__).'/footer.php' ?>
+<?php include dirname(__FILE__) . '/footer.php' ?>
 <script src="assets/js/jquery.min.js"></script>
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/js/bs-animation.js"></script>

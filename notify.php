@@ -32,22 +32,23 @@ if (Login::isLoggedIn()) {
     <link rel="stylesheet" href="assets/css/index.css">
     <link href="https://fonts.googleapis.com/css?family=Gaegu" rel="stylesheet">
     <style>
-    body {
-        padding: 1em;
-    }
-    .ui.menu {
-        margin: 3em 0em;
-    }
-    .ui.menu:last-child {
-        margin-bottom: 110px;
-    }
+        body {
+            padding: 1em;
+        }
+
+        .ui.menu {
+            margin: 3em 0em;
+        }
+
+        .ui.menu:last-child {
+            margin-bottom: 110px;
+        }
     </style>
-<!--    <link rel="stylesheet" href="assets/css/message.css">-->
 </head>
 <body>
 
 <div>
-    <?php include dirname(__FILE__).'/header.php' ?>
+    <?php include dirname(__FILE__) . '/header.php' ?>
 </div>
 
 
@@ -66,15 +67,15 @@ if (Login::isLoggedIn()) {
                     echo "<p>You got a notification!</p><hr/>";
                 } else {
                     $extra = json_decode($n['extra']);
-                    echo "<p>".$senderName . " mentioned you in a post! - " . $extra->postbody . "</p><hr/>";
+                    echo "<p>" . $senderName . " mentioned you in a post! - " . $extra->postbody . "</p><hr/>";
                 }
             } else if ($n['type'] == 2) {
                 $senderName = DB::query('SELECT username FROM users WHERE id=:senderid', array(':senderid' => $n['sender']))[0]['username'];
-                echo "<p>".$senderName . " liked your post!</p><hr/>";
+                echo "<p>" . $senderName . " liked your post!</p><hr/>";
             } else if ($n['type'] == 3) {
                 $senderName = DB::query('SELECT username FROM users WHERE id=:senderid', array(':senderid' => $n['sender']))[0]['username'];
                 $postLink = 'profile.php?username=' . $username;
-                echo "<p>".$senderName . " want to comment your <a href='". $postLink ."'>post</a>.</p><hr/>";
+                echo "<p>" . $senderName . " want to comment your <a href='" . $postLink . "'>post</a>.</p><hr/>";
             } else if ($n['type'] == 4) {
                 $senderName = DB::query('SELECT username FROM users WHERE id=:senderid', array(':senderid' => $n['sender']))[0]['username'];
                 $profileLink = 'profile.php?username=' . $senderName;
@@ -82,11 +83,11 @@ if (Login::isLoggedIn()) {
 
             }
         }
-    ?>
+        ?>
     </div>
 </div>
 
-<?php include dirname(__FILE__).'/footer.php' ?>
+<?php include dirname(__FILE__) . '/footer.php' ?>
 <script src="assets/js/jquery.min.js"></script>
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="assets/js/bs-animation.js"></script>
