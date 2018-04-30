@@ -68,6 +68,9 @@ if (isset($_GET['username'])) {
 
         if (isset($_POST['deletepost'])) {
             // echo "<script type='text/javascript'>alert('111111');</script>";
+            if ($isAdmin) {
+                DB::query('DELETE FROM posts WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $userid));
+            }
             if (DB::query('SELECT id FROM posts WHERE id=:postid AND user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid))) {
                 DB::query('DELETE FROM comments WHERE post_id=:postid', array(':postid' => $_GET['postid']));
                 DB::query('DELETE FROM posts WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid));
@@ -82,47 +85,13 @@ if (isset($_GET['username'])) {
             DB::query('UPDATE posts SET comment=1 WHERE id=:postid and user_id=:userid', array(':postid' => $_GET['postid'], ':userid' => $followerid));
         }
 
-        if (isset($_POST['post'])) {
-
-            $setting = $_POST['setting'];
-            switch ($setting) {
-
-                case 'private':
-                    $privacy = 1;
-                    break;
-                case 'friends':
-                    $privacy = 2;
-                    break;
-
-                default:
-                    $privacy = 0;
-                    break;
-            }
-
-            if ($_POST['need_approval']) $need = 1;
-
-            if ($_FILES['postimg']['size'] == 0) {
-                $postid = Post::createPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy, $need);
-            } else {
-                $postid = Post::createImgPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy, $need);
-                Image::uploadImage('postimg', "UPDATE posts SET postimg=:postimg WHERE id=:postid", array(':postid' => $postid));
-            }
-            header("Location: {$_SERVER["HTTP_REFERER"]}");
-
-        }
-
         if (isset($_GET['postid']) && !isset($_POST['deletepost']) && (isset($_POST['like'])||isset($_POST['unlike']))) {
             Post::likePost($_GET['postid'], $followerid);
             header("Location:profile.php?username=".$username);
         }
 
-        if ($followerid == $userid) {
-            $post = True;
-        }
 
-        // if (!$post) {
-            $posts = Post::displayPosts($userid, $username, $followerid, $isAdmin);
-        // }
+        $posts = Post::getPosts($userid, $username, $followerid, $isAdmin);
 
         if (isset($_POST['searchbox'])) {
             $search = True;
@@ -198,7 +167,7 @@ if (isset($_GET['username'])) {
                 <ul class="list-group">
                     <li class="list-group-item" style="padding:20px;">
                         <p></p>
-                        <img src=<?php echo $userimg ?> class="ui rounded image" alt="Avatar""> 
+                        <img src=<?php echo $userimg ?> class="ui rounded image" alt="Avatar"">
                         <span><strong>About Me</strong></span>
 
                         <p>Welcome <?php echo $username; ?>'s Profile<?php if ($verified) {
@@ -223,48 +192,18 @@ if (isset($_GET['username'])) {
                 <ul class="list-group">
                     <?php 
                         if (!$search) {
-                            // echo $posts[0][4];
 
-                            // Post::displayProfilePosts($posts);
                             echo Post::displayProfilePosts($posts, $userid, $username, $followerid, $isAdmin);
 
                         }
-                        else {echo Post::displaySearchPosts($posts,$userid, $username, $followerid, $isAdmin);}
-                         ?>
+                        else {
+                            echo Post::displaySearchPosts($posts,$userid, $username, $followerid, $isAdmin);
+                        }
+                    ?>
                 </ul>
                 </div>
             </div>
-            <!-- <div class="col-md-3">
-                <form action="profile.php?username=<?php echo $username; ?>" method="post" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <textarea name="postbody" class="form-control" rows="12"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <br/>Upload an image:
-                    </div>
-
-                    <div class="form-group">
-                        <input type="file" class="btn btn-info" name="postimg">
-                    </div>
-
-                    <div class="radio">
-                        <label><input type="radio" name="setting" value="public" checked> Public</label>
-                    </div>
-                    <div class="radio">
-                        <label><input type="radio" name="setting" value="private"> Private</label>
-                    </div>
-                    <div class="radio ">
-                        <label><input type="radio" name="setting"><input type="radio" name="setting" value="friends"> Friends Only</label>
-                    </div>
-
-                    <div class="form-group">
-                        <input type="submit" class="btn btn-danger" name="post" value="NEW POST">
-                    </div>
-
-                </form>
-
-            </div> -->
+  
         </div>
     </div>
 </div>

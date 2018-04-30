@@ -5,25 +5,27 @@ include('./classes/Post.php');
 include('./classes/Request.php');
 include_once('./classes/Comment.php');
 include_once('./classes/Image.php');
+include('./classes/Notify.php');
 
 
 $showTimeline = False;
-$followingposts = null;
+$indexPosts = null;
 $search = False;
 $isAdmin = False;
-//$_FILES['commentimg']['size'] = (isset($_FILES['commentimg']['size'])) ? $_POST['file'] :'' ;
 if (Login::isLoggedIn()) {
     $userid = Login::isLoggedIn();
     $username = DB::query('SELECT username FROM users WHERE id = :userid', array(':userid'=>$userid))[0]['username'];
     if (DB::query('SELECT username FROM admins WHERE username=:username', array(':username'=>$username))) $isAdmin = True;
-    $followingposts = DB::query('SELECT posts.id, posts.body, posts.posted_at, posts.likes, users.username, posts.postimg, users.profileimg, posts.comment
+    $indexPosts = DB::query('SELECT posts.id, posts.body, posts.posted_at, posts.likes, users.username, posts.postimg, users.profileimg, posts.privacy, posts.comment
         FROM users JOIN posts ON users.id = posts.user_id
         JOIN followers
         WHERE posts.privacy = 2
-        AND followers.follower_id = posts.user_id
-        AND followers.user_id = :userid
+        AND (
+        (followers.follower_id = posts.user_id AND followers.user_id = :userid)
+        OR (posts.user_id = :userid)
+        )
         UNION
-        SELECT posts.id, posts.body, posts.posted_at, posts.likes, users.username, posts.postimg, users.profileimg, posts.comment
+        SELECT posts.id, posts.body, posts.posted_at, posts.likes, users.username, posts.postimg, users.profileimg, posts.privacy, posts.comment
         FROM users JOIN posts ON users.id = posts.user_id
         WHERE (posts.privacy = 1 AND posts.user_id = :userid)
         OR posts.privacy = 0
@@ -31,7 +33,7 @@ if (Login::isLoggedIn()) {
 
     $showTimeline = True;
 } else {
-    $followingposts = DB::query('SELECT posts.id, posts.body, posts.posted_at, posts.likes, users.username, posts.postimg, users.profileimg, posts.comment
+    $indexPosts = DB::query('SELECT posts.id, posts.body, posts.posted_at, posts.likes, users.username, posts.postimg, users.profileimg, posts.privacy
         FROM users JOIN posts ON users.id = posts.user_id
         WHERE posts.privacy = 0');
     $showTimeline = True;
@@ -78,26 +80,48 @@ if (isset($_POST['searchbox'])) {
     if (count($tosearch) == 1) {
             $tosearch = str_split($tosearch[0], 2);
     }
-    $whereclause1 = "";
-    $paramsarray1 = array(':username'=>'%'.$_POST['searchbox'].'%');
+    $whereclause = "";
+    $paramsarray = array(':username'=>'%'.$_POST['searchbox'].'%');
     for ($i = 0; $i < count($tosearch); $i++) {
-        $whereclause1 .= " OR username LIKE :u$i ";
-        $paramsarray1[":u$i"] = $tosearch[$i];
+        $whereclause .= " OR username LIKE :u$i ";
+        $paramsarray[":u$i"] = $tosearch[$i];
     }
 
-    $whereclause2 = "";
-    $paramsarray2 = array(':body'=>'%'.$_POST['searchbox'].'%');
-    for ($i = 0; $i < count($tosearch); $i++) {
-            if ($i % 2) {
-            $whereclause2 .= " OR body LIKE :p$i ";
-            $paramsarray2[":p$i"] = $tosearch[$i];
-            }
-    }
-    $posts = DB::query('SELECT posts.id, posts.body, posts.likes, users.username, posts.comment, posts.postimg, posts.posted_at
+
+    $searchedPosts = DB::query('SELECT posts.id, posts.body, posts.likes, users.profileimg, users.username, posts.comment, posts.postimg, posts.posted_at
         FROM posts,users 
         WHERE posts.user_id = users.id AND
-        users.username LIKE :username '.$whereclause1.
-        'ORDER BY id DESC', $paramsarray1);
+        users.username LIKE :username '.$whereclause.
+        'ORDER BY id DESC', $paramsarray);
+}
+
+if (isset($_POST['post'])) {
+
+    $setting = $_POST['setting'];
+    switch ($setting) {
+
+        case 'private':
+            $privacy = 1;
+            break;
+        case 'friends':
+            $privacy = 2;
+            break;
+
+        default:
+            $privacy = 0;
+            break;
+    }
+
+    $need = 0;
+    if ($_POST['need_approval']) $need = 1;
+
+    if ($_FILES['postimg']['size'] == 0) {
+        $postid = Post::createPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy, $need);
+    } else {
+        $postid = Post::createImgPost($_POST['postbody'], Login::isLoggedIn(), $userid, $isAdmin, $privacy, $need);
+        Image::uploadImage('postimg', "UPDATE posts SET postimg=:postimg WHERE id=:postid", array(':postid' => $postid));
+    }
+
 }
 
 ?>
@@ -150,9 +174,6 @@ if (isset($_POST['searchbox'])) {
                         href=<?php echo $redi;?>>
                     <i class="icon ion-ios-people"></i>
                 </a>
-                <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span
-                            class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span
-                            class="icon-bar"></span><span class="icon-bar"></span></button>
             </div>
             <div class="collapse navbar-collapse" id="navcol-1">
                 <form class="navbar-form navbar-left hidden-xs hidden-sm" action="index.php" method="post">
@@ -204,9 +225,9 @@ if (isset($_POST['searchbox'])) {
         WHERE id=:user_id', array(':user_id'=>$userid));
         ?>
     <div class="ui main text container segment">
-    <form action="profile.php?username=<?php echo $username; ?>" method="post" enctype="multipart/form-data">
+    <form action="index.php?username=<?php echo $username; ?>" method="post" enctype="multipart/form-data">
         <div class="form-group">
-            <img class="postavatar ui rounded image" src=<?php echo $userimg[0][0]?>>
+            <a href="profile.php?username=<?php echo $username; ?>"><img class="postavatar ui rounded image" src=<?php echo $userimg[0][0]?>></a>
             <textarea name="postbody" class="post postarea form-control" rows="2" placeholder="What's on your mind?"></textarea>
         </div>
 
@@ -229,10 +250,9 @@ if (isset($_POST['searchbox'])) {
     <div class="ui main text container segment">
         <div class="timelineposts">
         <?php
-        if (Login::isLoggedIn() && !$search) {?>
-            
-            <?php
-            foreach (array_reverse($followingposts) as $post) {
+        if (Login::isLoggedIn()) {
+            $posts = $search ? $searchedPosts : $indexPosts;
+            foreach (array_reverse($posts) as $post) {
                 if($post['postimg']){
                     $w = " a photo";
                 }
@@ -244,26 +264,23 @@ if (isset($_POST['searchbox'])) {
                 echo "<img class='smallavatar ui rounded image' src='".$post['profileimg']."'>";
                 echo "<span class='post postwho'><a href=" . $profileLink . ">" . $post['username'] . "</a> posted".$w."<p class='post posttime'>".$post['posted_at']."</p></span>";
                 echo "<img src='".$post['postimg']."' class=\"ui rounded image\" >";
-                echo "<p class='post postbody'>". $post['body'] . "</p></div>";
+                echo "<p class='post postbody'>".Post::link_add($post['body']) . "</p></div>";
                 echo "<form action='index.php?postid=" . $post['id'] . "' class=\"form-group\" method='post'>";
 
                 if (!DB::query('SELECT post_id FROM post_likes WHERE post_id=:postid AND user_id=:userid', array(':postid' => $post['id'], ':userid' => $userid))) {
 
-                    // echo "<input type='submit' class=\"btn btn-danger\" name='like' value='Like'>";
                     echo '<div class="ui labeled button" tabindex="0">';
                     echo '<button type="submit" class="small ui button" name="like">
                             <i class="heart icon"></i> Like
                             </button>';
                     echo '<a class="ui basic label">'.$post['likes'].'</a></div>';
                 } else {
-                    // echo "<input type='submit' class=\"btn btn-danger\" name='unlike' value='Unlike'>";
                     echo '<div class="ui labeled button" tabindex="0">';
                     echo '<button type="submit" class="small ui red button" name="unlike">
                             <i class="heart icon"></i> unLike
                             </button>';
                     echo '<a class="ui basic red left pointing label">'.$post['likes'].'</a></div>';
                 }
-                echo "<hr/>";
                 echo "</form>";
                 if ($post['comment'] == 0) {
                     echo "<form action='index.php?postid=" . $post['id'] . "' class=\"form-group\"  method='post'  enctype=\"multipart/form-data\">";
@@ -281,18 +298,8 @@ if (isset($_POST['searchbox'])) {
                 echo "<p></p><hr>";
 
             }
-        } else if (!Login::isLoggedIn() && !$search) {
-            $publicposts = DB::query('SELECT posts.id, posts.body, posts.posted_at, posts.likes, posts.privacy, posts.postimg, users.username, users.profileimg
-            FROM users JOIN posts ON users.id = posts.user_id
-            WHERE posts.privacy = 0');
-            displayposts($publicposts);
         } else {
-            Post::displayProfilePosts($posts, $userid, $username, Login::isLoggedIn(), $isAdmin);
-        }
-
-
-        function displayposts($posts)
-        {
+            $posts = $search ? $searchedPosts : $indexPosts;
             foreach (array_reverse($posts) as $post) {
                 if($post['postimg']){
                     $w = " a photo";
@@ -305,9 +312,8 @@ if (isset($_POST['searchbox'])) {
                 echo "<img class='smallavatar ui rounded image' src='".$post['profileimg']."'>";
                 echo "<span class='post postwho'><a href=" . $profileLink . ">" . $post['username'] . "</a> posted".$w."<p class='post posttime'>".$post['posted_at']."</p></span>";
                 echo "<img src='".$post['postimg']."' class=\"ui rounded image\" >";
-                echo "<p class='post postbody'>". $post['body'] . "</p></div>";
+                echo "<p class='post postbody'>".Post::link_add($post['body']) . "</p></div>";
                 echo "<form action='index.php?postid=" . $post['id'] . "' class=\"form-group\" method='post'>";
-                // echo "<span class=\"text-danger\">" . $post['likes'] . " likes</span>";
                 echo "<hr/>";
                 echo "</form>";
             }

@@ -126,6 +126,22 @@ include('./classes/DB.php');
     $("#password").change(validatePassword);
     $("#password").keyup(validatePassword);
 
+
+
+      function emailValidate() {
+    $("span").remove("#span-email");
+    if($("#email").val().length < 1)
+        $("#email").after("<span id='span-email' class='error'>Email is Mandatory</span>");
+    else if(!(/^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/.test($("#email").val())))
+        $("#email").after("<span id='span-email' class='info'>Please input valid email address!</span>");
+    else
+        $("#email").after("<span id='span-email' class='info'>OK</span>");
+}
+
+    $("#email").focus(function(){emailValidate();});
+    $("#email").change(function(){emailValidate();});
+    $("#email").keyup(function(){emailValidate();});
+
     $('#ca').click(function (event) {
         $.ajax({
 
@@ -150,6 +166,7 @@ include('./classes/DB.php');
                 }, 2000)
                 $('[data-bs-hover-animate]').addClass('animated ' + $('[data-bs-hover-animate]').attr('data-bs-hover-animate'))
                 console.log(r)
+                alert(r.responseText)
             }
 
         });
